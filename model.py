@@ -7,13 +7,10 @@ filename_queue = tf.train.string_input_producer(['./NR-ER/NR-ER-train/names_labe
 
 reader = tf.TextLineReader()
 key, value = reader.read(filename_queue)
-# key返回的是读取文件和行数信息 b'./data/iris.csv:146'
-# value是按行读取到的原始字符串，送到下面的decoder去解析
 
-record_defaults = [["Null"],[1]] # 这里的数据类型决定了读取的数据类型，而且必须是list形式
-example, label = tf.decode_csv(value, record_defaults=record_defaults) # 解析出的每一个属性都是rank为0的标量
-#example_batch, label_batch = tf.train.batch([features, label], batch_size=100, capacity=200, num_threads=2)
-#features = tf.stack([col1, col2, col3, col4])
+
+record_defaults = [["Null"],[1]] 
+example, label = tf.decode_csv(value, record_defaults=record_defaults) # 
 train_labl=list()
 
 #print("list",labelarr)
@@ -43,13 +40,10 @@ filename_queue = tf.train.string_input_producer(['./NR-ER/NR-ER-test/names_label
 
 reader = tf.TextLineReader()
 key, value = reader.read(filename_queue)
-# key返回的是读取文件和行数信息 b'./data/iris.csv:146'
-# value是按行读取到的原始字符串，送到下面的decoder去解析
 
-record_defaults = [["Null"],[1]] # 这里的数据类型决定了读取的数据类型，而且必须是list形式
-example, label = tf.decode_csv(value, record_defaults=record_defaults) # 解析出的每一个属性都是rank为0的标量
-#example_batch, label_batch = tf.train.batch([features, label], batch_size=100, capacity=200, num_threads=2)
-#features = tf.stack([col1, col2, col3, col4])
+
+record_defaults = [["Null"],[1]] 
+example, label = tf.decode_csv(value, record_defaults=record_defaults) 
 test_labl=[]
 #print("list",labelarr)
 with tf.Session() as sess:
@@ -143,8 +137,10 @@ prediction = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
 # cross_entropy = tf.reduce_mean(-tf.reduce_sum(ys * tf.log(prediction),
 #                                               reduction_indices=[1]))       # loss
 
-cross_entropy = tf.reduce_mean(tf.reduce_sum(tf.square(ys - prediction),
-                     reduction_indices=[1]))
+y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
+
+cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=ys, logits=y_conv))
+
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 #train_step = tf.train.GradientDescentOptimizer(0.01).minimize(cross_entropy)
 
