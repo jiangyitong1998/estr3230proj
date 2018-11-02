@@ -48,10 +48,13 @@ b[np.arange(937),ones] = 1
 train_labl = np.asarray(train_labl)
 labelarray=train_labl[np.newaxis]
 final = np.zeros((7697,2))
-final[np.arange(7697),labelarray]
-for k in range(7):
- 	train_smiles = np.vstack((train_smile, trues))
- 	train_lables = np.vstack((final, b))
+final[np.arange(7697),labelarray] = 1
+train_smiles = np.vstack((train_smile, trues))
+train_lables = np.vstack((final, b))
+for k in range(6):
+ 	train_smiles = np.vstack((train_smiles, trues))
+ 	train_lables = np.vstack((train_lables, b))
+
 
 filename_queue = tf.train.string_input_producer(['./NR-ER/NR-ER-test/names_labels.csv'],shuffle=False)
 
@@ -112,6 +115,7 @@ def next_batch(num, data, labels):
     Return a total of `num` random samples and labels. 
     '''
     idx = np.arange(0 , len(data))
+    #print(len(data))
     np.random.shuffle(idx)
     idx = idx[:num]
     data_shuffle = [data[ i] for i in idx]
@@ -170,8 +174,9 @@ sess.run(init)
 #print('lll')
 for i in range(3000):
     train_batch_xs,train_batch_ys = next_batch(100,train_smiles, train_lables)
+    #print(i)
     #print(train_batch_ys)
-    print(i)
+    
     #train_batch_xs.reshape(100,28656)
     
     #print(train_batch_xs.shape,train_batch_ys.shape)
@@ -179,7 +184,7 @@ for i in range(3000):
     #print(sess.run(b_conv1))
     _, guess,cross = sess.run([train_step,prediction,cross_entropy], feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 0.5})
     #sess.run(train_step, feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 0.5})
-    print(cross)
+    #print(cross)
     #print(sess.run(h_pool1.shape))
     #print(test_smile[:265].shape, test_lable[:265].shape)
     if i % 50 == 0:
