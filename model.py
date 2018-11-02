@@ -24,13 +24,25 @@ with tf.Session() as sess:
 	
     coord.request_stop()
     coord.join(threads)
-train_lab= np.asarray(train_labl)
-train_lab=train_lab[np.newaxis]
-train_lable = np.zeros((7967,2))
+
 train_lable[np.arange(7967),train_lab] = 1
 data = np.load('./NR-ER/NR-ER-train/names_onehots.npy')
 data = data.item()
 train_smile = data["onehots"]
+
+x = 0
+for j in range(9)
+	for i in range(7967):
+		if train_labl[i] == 1:
+			train_labl.append(train_labl[i])
+			si = np.reshape(train_smile[i],(1,72,398))
+			train_smile = np.vstack((train_smile,si))
+			x = x+1
+
+train_lab= np.asarray(train_labl)
+train_lab=train_lab[np.newaxis]
+train_lable = np.zeros((7967+x,2))
+
 #train_smile=tf.reshape(train_smil,[7697,28656])
 # np.reshape(train_smile)
 # print(train_smile.shape)
@@ -56,6 +68,9 @@ with tf.Session() as sess:
 	
     coord.request_stop()
     coord.join(threads)
+
+
+    
 test_lab= np.asarray(test_labl)
 test_lab=test_lab[np.newaxis]
 test_lable = np.zeros((265,2))
