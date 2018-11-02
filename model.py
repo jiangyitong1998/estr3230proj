@@ -17,7 +17,7 @@ train_labl=list()
 with tf.Session() as sess:
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(coord=coord)
-    for i in range(7967):
+    for i in range(7697):
         e_val, l_val = sess.run([example, label])
         train_labl.append(l_val)
         #print (l_val)
@@ -25,29 +25,34 @@ with tf.Session() as sess:
     coord.request_stop()
     coord.join(threads)
 
-train_lable[np.arange(7967),train_lab] = 1
+
 data = np.load('./NR-ER/NR-ER-train/names_onehots.npy')
 data = data.item()
 train_smile = data["onehots"]
 
-x = 0
-for j in range(9)
-	for i in range(7967):
-		if train_labl[i] == 1:
-			train_labl.append(train_labl[i])
-			si = np.reshape(train_smile[i],(1,72,398))
-			train_smile = np.vstack((train_smile,si))
-			x = x+1
+ones = []
+trues = []
+for j in range(0,7697):	
+	if train_labl[j] == 1:
+		ones.append(train_labl[j])
+		trues.append(train_smile[j])
+		
+ones = np.asarray(ones)
+ones = ones[np.newaxis]
+trues = np.asarray(trues)
+b = np.zeros((937,2))
+b[np.arange(937),ones] = 1
+# print(trues.shape)
+# print(b)
 
-train_lab= np.asarray(train_labl)
-train_lab=train_lab[np.newaxis]
-train_lable = np.zeros((7967+x,2))
+train_labl = np.asarray(train_labl)
+labelarray=train_labl[np.newaxis]
+final = np.zeros((7697,2))
+final[np.arange(7697),labelarray]
+for k in range(7):
+ 	train_smiles = np.vstack((train_smile, trues))
+ 	train_lables = np.vstack((final, b))
 
-#train_smile=tf.reshape(train_smil,[7697,28656])
-# np.reshape(train_smile)
-# print(train_smile.shape)
-
-# print(type(train_smile))
 filename_queue = tf.train.string_input_producer(['./NR-ER/NR-ER-test/names_labels.csv'],shuffle=False)
 
 reader = tf.TextLineReader()
@@ -70,7 +75,7 @@ with tf.Session() as sess:
     coord.join(threads)
 
 
-    
+
 test_lab= np.asarray(test_labl)
 test_lab=test_lab[np.newaxis]
 test_lable = np.zeros((265,2))
@@ -163,8 +168,8 @@ sess = tf.Session()
 init = tf.global_variables_initializer()
 sess.run(init)
 #print('lll')
-for i in range(1000):
-    train_batch_xs,train_batch_ys = next_batch(100,train_smile, train_lable)
+for i in range(3000):
+    train_batch_xs,train_batch_ys = next_batch(100,train_smiles, train_lables)
     #print(train_batch_ys)
     print(i)
     #train_batch_xs.reshape(100,28656)
