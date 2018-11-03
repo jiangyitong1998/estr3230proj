@@ -87,14 +87,90 @@ data = np.load('./NR-ER/NR-ER-test/names_onehots.npy')
 data = data.item()
 test_smile = data["onehots"]
 
-def compute_accuracy(v_xs,v_ys):
-	global prediction
-	y_pre = sess.run(prediction,feed_dict={xs:v_xs,keep_prob:1})
-	#print(y_pre,v_ys)
-	correct_prediction = tf.equal(tf.argmax(y_pre,1), tf.argmax(v_ys,1))
-	accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
-	result = sess.run(accuracy, feed_dict={xs: v_xs, ys: v_ys, keep_prob: 1})
-	return result
+# def compute_accuracy(v_xs,v_ys):
+# 	global prediction
+# 	y_pre = sess.run(prediction,feed_dict={xs:v_xs,keep_prob:1})
+# 	y_pred = tf.argmax(y_pre,1)
+# 	y_true = tf.argmax(v_ys,1)
+# 	print(y_pred,y_true)
+# 	recall1,recall1_op = tf.metrics.recall(y_true,y_pred)
+# 	#recall2, recall2_op = tf.metrics.recall(V_ys,y_pre)
+	
+# 	#print(y_pre,v_ys)
+# 	# correct_prediction = tf.equal(tf.argmax(y_pre,1), tf.argmax(v_ys,1))
+# 	# accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+# 	result = sess.run([recall1,recall1_op], feed_dict={xs: v_xs, ys: v_ys, keep_prob: 1})
+# 	#print(recall1)
+# 	return result
+
+def compute_accuracy(v_xs, v_ys):
+  global prediction
+  y_pre = sess.run(prediction,feed_dict={xs:v_xs,keep_prob:1})
+  y_pred = tf.argmax(y_pre, 1)
+  actuals = tf.argmax(v_ys, 1)
+
+  ones_like_actuals = tf.ones_like(actuals)
+  zeros_like_actuals = tf.zeros_like(actuals)
+  ones_like_predictions = tf.ones_like(y_pred)
+  zeros_like_predictions = tf.zeros_like(y_pred)
+
+  tp_op = tf.reduce_sum(
+    tf.cast(
+      tf.logical_and(
+        tf.equal(actuals, ones_like_actuals), 
+        tf.equal(y_pred, ones_like_predictions)
+      ), 
+      "float"
+    )
+  )
+
+  tn_op = tf.reduce_sum(
+    tf.cast(
+      tf.logical_and(
+        tf.equal(actuals, zeros_like_actuals), 
+        tf.equal(y_pred, zeros_like_predictions)
+      ), 
+      "float"
+    )
+  )
+
+  fp_op = tf.reduce_sum(
+    tf.cast(
+      tf.logical_and(
+        tf.equal(actuals, zeros_like_actuals), 
+        tf.equal(y_pred, ones_like_predictions)
+      ), 
+      "float"
+    )
+  )
+
+  fn_op = tf.reduce_sum(
+    tf.cast(
+      tf.logical_and(
+        tf.equal(actuals, ones_like_actuals), 
+        tf.equal(y_pred, zeros_like_predictions)
+      ), 
+      "float"
+    )
+  )
+
+  tp, tn, fp, fn = sess.run(
+      [tp_op, tn_op, fp_op, fn_op], 
+      feed_dict={xs: v_xs, ys: v_ys, keep_prob: 1}
+    )
+
+  tpr = float(tp)/(float(tp) + float(fn))
+  fpr = float(tn)/(float(tn) + float(fp))
+
+  return 1/2 * (tpr + fpr)
+
+  #accuracy = (float(tp) + float(tn))/(float(tp) + float(fp) + float(fn) + float(tn))
+
+  # recall = tpr
+  # precision = float(tp)/(float(tp) + float(fp))
+
+  # f1_score = (2 * (precision * recall)) / (precision + recall)
+
 
 def weight_variable(shape):
 	initial = tf.truncated_normal(shape,stddev=0.01)
@@ -190,4 +266,8 @@ for i in range(3000):
     if i % 50 == 0:
         print(compute_accuracy(
             test_smile[:265], test_lable[:265]))
+        # print(compute_accuracy(
+        #     train_batch_xs,train_batch_ys))
+saver = tf.train.Saver()
+saver.save(sess, './my_model', global_step = 1)
 
