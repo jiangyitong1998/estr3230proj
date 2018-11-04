@@ -106,6 +106,7 @@ test_smile = data["onehots"]
 def compute_accuracy(v_xs, v_ys):
   global prediction
   y_pre = sess.run(prediction,feed_dict={xs:v_xs,keep_prob:1})
+  #print(y_pre[:10])
   y_pred = tf.argmax(y_pre, 1)
   actuals = tf.argmax(v_ys, 1)
 
@@ -252,7 +253,7 @@ sess = tf.Session()
 init = tf.global_variables_initializer()
 sess.run(init)
 #print('lll')
-for i in range(6000):
+for i in range(2000):
     train_batch_xs,train_batch_ys = next_batch(200,train_smiles, train_lables)
     #print(i)
     #print(train_batch_ys)
@@ -263,15 +264,21 @@ for i in range(6000):
     #test_batch_xs,test_batch_ys = next_batch(test_smile, test_lable, batchSize) #print(batch_xs)
     #print(sess.run(b_conv1))
     
-    _, guess,cross = sess.run([train_step,prediction,cross_entropy], feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 0.5})
+    _, guess= sess.run([train_step,prediction], feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 0.5})
     
     #sess.run(train_step, feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 0.5})
     #print(cross)
     #print(sess.run(h_pool1.shape))
     #print(test_smile[:265].shape, test_lable[:265].shape)
     if i % 100 == 0:
+        cross= sess.run([cross_entropy], feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 1})
+        print(cross)
         print(compute_accuracy(
             test_smile[:265], test_lable[:265]))
+        cross1 = sess.run([cross_entropy], feed_dict={xs: test_smile[:265], ys: test_lable[:265], keep_prob: 1})
+        print(cross1)
+        print(compute_accuracy(
+            train_batch_xs, train_batch_ys))
         # print(compute_accuracy(
         #     train_batch_xs,train_batch_ys))
 # saver = tf.train.Saver()
