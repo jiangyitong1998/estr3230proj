@@ -173,12 +173,12 @@ def compute_accuracy(v_xs, v_ys):
   # f1_score = (2 * (precision * recall)) / (precision + recall)
 
 
-def weight_variable(name,shapen):
-	# initial = tf.truncated_normal(shape,stddev=0.01)
-	# return tf.Variable(initial)
-  initial = tf.get_variable(name,shape=shapen,
-           initializer=tf.contrib.layers.xavier_initializer())
-  return tf.Variable(initial)
+def weight_variable(name,shape):
+	 initial = tf.truncated_normal(shape,stddev=0.01)
+	 return tf.Variable(initial)
+ # initial = tf.get_variable(name,shape=shapen,
+ #          initializer=tf.contrib.layers.xavier_initializer())
+ # return tf.Variable(initial)
 
 def bias_variable(shape):
 	initial = tf.constant(0.0, shape=shape)
@@ -188,7 +188,7 @@ def conv2d(x,W):
 	return tf.nn.conv2d(x,W,strides=[1,1,1,1],padding='SAME')
 
 def max_pool_2x2(x):
-	return tf.nn.max_pool(x,ksize=[1,2,2,1],strides=[1,2,2,1],padding='SAME')
+	return tf.nn.max_pool(x,ksize=[1,1,2,1],strides=[1,1,2,1],padding='SAME')
 
 def next_batch(num, data, labels):
     '''
@@ -216,20 +216,20 @@ x_image = tf.reshape(xs,[-1,72,398,1])
 ##conv1 layer##SAME
 W_conv1 = weight_variable("W_conv1",[72,3,1,64])
 b_conv1 = bias_variable([64])
-h_conv1 = tf.nn.relu(tf.nn.conv2d(x_image,W_conv1,strides=[1,73,1,1],padding='SAME')+b_conv1) #output size 72*395*64
-h_pool1 = tf.nn.max_pool(h_conv1,poolsize=[1,1,2,1],strides=[1,1,2,1],padding='SAME') #72*198*64
+h_conv1 = tf.nn.relu(tf.nn.conv2d(x_image,W_conv1,strides=[1,73,1,1],padding='SAME')+b_conv1) #output size 1*398*32
+h_pool1 = tf.nn.max_pool(h_conv1,ksize=[1,1,2,1],strides=[1,1,2,1],padding='SAME') #1*199*64
 
 # ##conv1 layer##
-W_conv2 = weight_variable("W_conv2",[5,5,64,128])
+W_conv2 = weight_variable("W_conv2",[1,3,64,128])
 b_conv2 = bias_variable([128])
-h_conv1 = tf.nn.relu(tf.nn.conv2d(h_pool1,W_conv2,strides=[1,1,1,1],padding='SAME')+b_conv2) #output size 72*198*128
-h_pool1 = tf.nn.max_pool(h_conv1,poolsize=[1,2,2,1],strides=[1,2,2,1],padding='SAME') #36*99*128
+h_conv2 = tf.nn.relu(conv2d(h_pool1,W_conv2)+b_conv2) #output size 1*199*128
+h_pool2 = max_pool_2x2(h_conv2) #1*100*128
            
 
 ## fc1 layer ##
-W_fc1 = weight_variable("W_fc1",[36*99*128,1024])
+W_fc1 = weight_variable("W_fc1",[1*100*128,1024])
 b_fc1 = bias_variable([1024])
-h_pool2_flat = tf.reshape(h_pool2,[-1,36*99*128])
+h_pool2_flat = tf.reshape(h_pool2,[-1,1*100*128])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
@@ -254,7 +254,7 @@ init = tf.global_variables_initializer()
 sess.run(init)
 #print('lll')
 for i in range(2000):
-    train_batch_xs,train_batch_ys = next_batch(200,train_smiles, train_lables)
+    train_batch_xs,train_batch_ys = next_batch(50,train_smiles, train_lables)
     #print(i)
     #print(train_batch_ys)
     
@@ -263,15 +263,16 @@ for i in range(2000):
     #print(train_batch_xs.shape,train_batch_ys.shape)
     #test_batch_xs,test_batch_ys = next_batch(test_smile, test_lable, batchSize) #print(batch_xs)
     #print(sess.run(b_conv1))
-    
+    # h = sess.run(h_pool2,feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 0.5})
+    #print(h.shape)
     _, guess= sess.run([train_step,prediction], feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 0.5})
-    
     #sess.run(train_step, feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 0.5})
     #print(cross)
     #print(sess.run(h_pool1.shape))
     #print(test_smile[:265].shape, test_lable[:265].shape)
     if i % 100 == 0:
         cross1 = sess.run([cross_entropy], feed_dict={xs: test_smile[:265], ys: test_lable[:265], keep_prob: 1})
+        print(i)
         cross= sess.run([cross_entropy], feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 1})
         print(cross1)
         print(compute_accuracy(
@@ -283,4 +284,6 @@ for i in range(2000):
         #     train_batch_xs,train_batch_ys))
 # saver = tf.train.Saver()
 # saver.save(sess, './my_model', global_step = 1)
+saver = tf.train.Saver()
+saver.save(sess, './my_model', global_step = 1)
 
