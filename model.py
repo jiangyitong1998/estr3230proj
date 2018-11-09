@@ -306,7 +306,7 @@ if True:
         init = tf.global_variables_initializer()
         sess.run(init)
         for i in range(600):
-            train_batch_xs,train_batch_ys = next_batch(50,train_smiles[j], train_lables[j])
+            train_batch_xs,train_batch_ys = next_batch(100,train_smiles[j], train_lables[j])
             # print(j)
             #print(train_labels10)
             
@@ -332,8 +332,16 @@ if True:
                 print(cross)
                 print(compute_accuracy(
                     train_batch_xs, train_batch_ys))
-        # Create a random training-set. Ignore the validation-set.
-       
+
+        saver = tf.train.Saver()
+        path = './mypath{n}/my_model'
+        path = path.format(n=j)
+        saver.save(sess, path, global_step = 1)
+
+        sess.close()
+     # Create a random training-set. Ignore the validation-set.
+      
+
 
         # Initialize the variables of the TensorFlow graph.
         
@@ -345,7 +353,7 @@ if True:
         # saver.save(sess=session, save_path=get_save_path(i))
 
         # Print newline.
-        print()
+       
 #print('lll')
 
         # print(compute_accuracy(
