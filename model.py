@@ -53,8 +53,8 @@ for j in range(0,7697):
 zeros = np.asarray(zeros)
 zeros = zeros[np.newaxis]
 falses = np.asarray(falses) 
-a = np.zeros((937,2))
-a[np.arange(937),ones] = 1
+a = np.zeros((6760,2))
+a[np.arange(6760),zeros] = 1
 
 
 # train_labl = np.asarray(train_labl)
@@ -82,7 +82,7 @@ train_smiles60 = falses[4685:5622]
 train_labels60 = a[4685:5622]
 train_smiles70 = falses[5622:6559]
 train_labels70 = a[5622:6559]
-print(train_smiles60.shape)
+print(train_labels10.shape)
 train_smiles = [None]*7
 train_lables = [None]*7
 train_smiles[0] = np.vstack((train_smiles10, trues))
@@ -262,20 +262,20 @@ x_image = tf.reshape(xs,[-1,72,398,1])
 ##conv1 layer##SAME
 W_conv1 = weight_variable("W_conv1",[72,3,1,64])
 b_conv1 = bias_variable([64])
-h_conv1 = tf.nn.relu(tf.nn.conv2d(x_image,W_conv1,strides=[1,73,1,1],padding='SAME')+b_conv1) #output size 72*398*64
-h_pool1 = tf.nn.max_pool(h_conv1,poolsize=[1,1,2,1],strides=[1,1,2,1],padding='SAME') #72*198*64
+h_conv1 = tf.nn.relu(tf.nn.conv2d(x_image,W_conv1,strides=[1,73,1,1],padding='SAME')+b_conv1) #output size 1*398*64
+h_pool1 = tf.nn.max_pool(h_conv1,ksize=[1,1,2,1],strides=[1,1,2,1],padding='SAME') #1*199*64
 
 # ##conv1 layer##
 W_conv2 = weight_variable("W_conv2",[5,5,64,128])
 b_conv2 = bias_variable([128])
-h_conv2 = tf.nn.relu(tf.nn.conv2d(h_pool1,W_conv2,strides=[1,1,1,1],padding='SAME')+b_conv2) #output size 72*198*128
-h_pool2 = tf.nn.max_pool(h_conv2,poolsize=[1,2,2,1],strides=[1,2,2,1],padding='SAME') #36*99*128
+h_conv2 = tf.nn.relu(tf.nn.conv2d(h_pool1,W_conv2,strides=[1,1,1,1],padding='SAME')+b_conv2) #output size 1*199*128
+h_pool2 = tf.nn.max_pool(h_conv2,ksize=[1,2,2,1],strides=[1,2,2,1],padding='SAME') #1*100*128
            
 
 ## fc1 layer ##
-W_fc1 = weight_variable("W_fc1",[36*99*128,1024])
+W_fc1 = weight_variable("W_fc1",[1*100*128,1024])
 b_fc1 = bias_variable([1024])
-h_pool2_flat = tf.reshape(h_pool2,[-1,36*99*128])
+h_pool2_flat = tf.reshape(h_pool2,[-1,1*100*128])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
@@ -301,14 +301,14 @@ train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 if True:
     # For each of the neural networks.
     for j in range(6):
-        print("Neural network: {0}".format(i))
+        print("Neural network",j)
         sess = tf.Session()
         init = tf.global_variables_initializer()
         sess.run(init)
-        for i in range(2000):
+        for i in range(600):
             train_batch_xs,train_batch_ys = next_batch(50,train_smiles[j], train_lables[j])
-            #print(i)
-            #print(train_batch_ys)
+            # print(j)
+            #print(train_labels10)
             
             #train_batch_xs.reshape(100,28656)
             
@@ -323,6 +323,7 @@ if True:
         #print(sess.run(h_pool1.shape))
         #print(test_smile[:265].shape, test_lable[:265].shape)
             if i % 100 == 0:
+                print(i)
                 cross1 = sess.run([cross_entropy], feed_dict={xs: test_smile[:265], ys: test_lable[:265], keep_prob: 1})
                 cross= sess.run([cross_entropy], feed_dict={xs: train_batch_xs, ys: train_batch_ys, keep_prob: 1})
                 print(cross1)
