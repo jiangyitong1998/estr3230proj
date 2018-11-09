@@ -69,34 +69,37 @@ a[np.arange(937),ones] = 1
 
 
 train_smiles10 = falses[0:937]
-train_labels10 = zeros[0:937]
+train_labels10 = a[0:937]
 train_smiles20 = falses[937:1847]
-train_labels20 = zeros[937:1847]
+train_labels20 = a[937:1847]
 train_smiles30 = falses[1847:2811]
-train_labels30 = falses[1847:2811]
-train_smiles40 = zeros[2811:3748]
-train_labels40 = falses[2811:3748]
-train_smiles50 = zeros[3748:4685]
-train_labels50 = falses[3748:4685]
-train_smiles60 = zeros[4685:5622]
-train_labels60 = falses[4685:5622]
-train_smiles70 = zeros[5622:6559]
+train_labels30 = a[1847:2811]
+train_smiles40 = falses[2811:3748]
+train_labels40 = a[2811:3748]
+train_smiles50 = falses[3748:4685]
+train_labels50 = a[3748:4685]
+train_smiles60 = falses[4685:5622]
+train_labels60 = a[4685:5622]
 train_smiles70 = falses[5622:6559]
-
-train_smiles[1] = np.vstack((train_smiles10, trues))
-train_lables[1] = np.vstack((train_lables10, b))
-train_smiles[2] = np.vstack((train_smiles20, trues))
-train_lables[2] = np.vstack((train_lables20, b))
-train_smiles[3] = np.vstack((train_smiles30, trues))
-train_lables[3] = np.vstack((train_lables30, b))
-train_smiles[4] = np.vstack((train_smiles40, trues))
-train_lables[4] = np.vstack((train_lables40, b))
-train_smiles[5] = np.vstack((train_smiles50, trues))
-train_lables[5] = np.vstack((train_lables50, b))
-train_smiles[6] = np.vstack((train_smiles60, trues))
-train_lables[6] = np.vstack((train_lables60, b))
-train_smiles[7] = np.vstack((train_smiles70, trues))
-train_lables[7] = np.vstack((train_lables70, b))
+train_labels70 = a[5622:6559]
+print(train_smiles60.shape)
+train_smiles = [None]*7
+train_lables = [None]*7
+train_smiles[0] = np.vstack((train_smiles10, trues))
+train_lables[0] = np.vstack((train_labels10, b))
+train_smiles[1] = np.vstack((train_smiles20, trues))
+train_lables[1] = np.vstack((train_labels20, b))
+train_smiles[2] = np.vstack((train_smiles30, trues))
+train_lables[2] = np.vstack((train_labels30, b))
+train_smiles[3] = np.vstack((train_smiles40, trues))
+train_lables[3] = np.vstack((train_labels40, b))
+train_smiles[4] = np.vstack((train_smiles50, trues))
+train_lables[4] = np.vstack((train_labels50, b))
+train_smiles[5] = np.vstack((train_smiles60, trues))
+#print(train_smiles[6].shape)
+train_lables[5] = np.vstack((train_labels60, b))
+train_smiles[6] = np.vstack((train_smiles70, trues))
+train_lables[6] = np.vstack((train_labels70, b))
 
 
 filename_queue = tf.train.string_input_producer(['./NR-ER/NR-ER-test/names_labels.csv'],shuffle=False)
@@ -216,12 +219,12 @@ def compute_accuracy(v_xs, v_ys):
   # f1_score = (2 * (precision * recall)) / (precision + recall)
 
 
-def weight_variable(name,shapen):
+def weight_variable(name,shape):
 	 initial = tf.truncated_normal(shape,stddev=0.01)
 	 return tf.Variable(initial)
   #initial = tf.get_variable(name,shape=shapen,
            #initializer=tf.contrib.layers.xavier_initializer())
-  return tf.Variable(initial)
+ # return tf.Variable(initial)
 
 def bias_variable(shape):
 	initial = tf.constant(0.0, shape=shape)
@@ -302,8 +305,8 @@ if True:
         sess = tf.Session()
         init = tf.global_variables_initializer()
         sess.run(init)
-          for i in range(2000):
-            train_batch_xs,train_batch_ys = next_batch(50,train_smiles[j+1], train_lables[j+1])
+        for i in range(2000):
+            train_batch_xs,train_batch_ys = next_batch(50,train_smiles[j], train_lables[j])
             #print(i)
             #print(train_batch_ys)
             
