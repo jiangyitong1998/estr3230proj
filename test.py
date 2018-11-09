@@ -6,8 +6,6 @@ import numpy as np
 
 
 
-
-
 filename_queue = tf.train.string_input_producer(['./NR-ER/NR-ER-test/names_labels.csv'],shuffle=False)
 
 reader = tf.TextLineReader()
@@ -17,24 +15,25 @@ key, value = reader.read(filename_queue)
 record_defaults = [["Null"],[1]] 
 example, label = tf.decode_csv(value, record_defaults=record_defaults) 
 test_labl=[]
-#print("list",labelarr)
+number = 0
+for line in open("./NR-ER/NR-ER-test/names_labels.csv"):
+      number = number+1
 with tf.Session() as sess:
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(coord=coord)
-    for i in range(265):
-        e_val, l_val = sess.run([example, label])
-        test_labl.append(l_val)
-        #print (l_val)
-    
-    coord.request_stop()
-    coord.join(threads)
-
+          coord = tf.train.Coordinator()
+          threads = tf.train.start_queue_runners(coord=coord)
+          for i in range(number):
+                          e_val, l_val = sess.run([example, label])
+                          test_labl.append(l_val)
+                                          #print (l_val)
+                                              
+                          coord.request_stop() 
+                          coord.join(threads)
 
 
 test_lab= np.asarray(test_labl)
 test_lab=test_lab[np.newaxis]
-test_lable = np.zeros((265,2))
-test_lable[np.arange(265),test_lab] = 1
+test_lable = np.zeros((number,2))
+test_lable[np.arange(number),test_lab] = 1
 data = np.load('./NR-ER/NR-ER-test/names_onehots.npy')
 data = data.item()
 test_smile = data["onehots"]
@@ -55,13 +54,13 @@ test_smile = data["onehots"]
 #   #print(recall1)
 #   return result
 
-def compute_accuracy(v_xs, v_ys):
+def compute_accuracy(y, v_ys):
   global prediction
-  y_pre = sess.run(prediction,feed_dict={xs:v_xs,keep_prob:1})
+  # y_pre = sess.run(prediction,feed_dict={xs:v_xs,keep_prob:1})
   #print(y_pre[:10])
-  y_pred = tf.argmax(y_pre, 1)
+  #y_pred = tf.argmax(y_pre, 1)
   actuals = tf.argmax(v_ys, 1)
-
+  y_pred = y
   ones_like_actuals = tf.ones_like(actuals)
   zeros_like_actuals = tf.zeros_like(actuals)
   ones_like_predictions = tf.ones_like(y_pred)
@@ -109,7 +108,7 @@ def compute_accuracy(v_xs, v_ys):
 
   tp, tn, fp, fn = sess.run(
       [tp_op, tn_op, fp_op, fn_op], 
-      feed_dict={xs: v_xs, ys: v_ys, keep_prob: 1}
+      feed_dict={ys: v_ys, keep_prob: 1}
     )
 
   tpr = float(tp)/(float(tp) + float(fn))
@@ -168,14 +167,14 @@ h_pool2 = tf.nn.max_pool(h_conv2,ksize=[1,2,2,1],strides=[1,2,2,1],padding='SAME
            
 
 ## fc1 layer ##
-W_fc1 = weight_variable("W_fc1",[1*100*128,1024])
-b_fc1 = bias_variable([1024])
+W_fc1 = weight_variable("W_fc1",[1*100*128,256])
+b_fc1 = bias_variable([256])
 h_pool2_flat = tf.reshape(h_pool2,[-1,1*100*128])
 h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 ## fc2 layer ##
-W_fc2 = weight_variable("W_fc2",[1024, 2])
+W_fc2 = weight_variable("W_fc2",[256, 2])
 b_fc2 = bias_variable([2])
 prediction = tf.nn.softmax(tf.matmul(h_fc1_drop, W_fc2) + b_fc2)
 
@@ -187,18 +186,50 @@ y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(labels=ys, logits=y_conv))
 
-
+sess = tf.Session()
 saver = tf.train.Saver()
 ckpt = tf.train.get_checkpoint_state('./mypath0')
 if ckpt and ckpt.model_checkpoint_path:
   saver.restore(sess, ckpt.model_checkpoint_path)
 
-
-
-for i in range(600):       
-    if i % 100 == 0:
-        print(i)
-        cross1 = sess.run([cross_entropy], feed_dict={xs: test_smile[:265], ys: test_lable[:265], keep_prob: 1})
-        print(cross1)
-        print(compute_accuracy(
-            test_smile[:265], test_lable[:265]))
+#def voteadd(pred)
+        
+file = open("label.txt","w")
+first = 0
+for i in range(7):       
+        print('Network ',i)
+        sess = tf.Session()
+        saver = tf.train.Saver()
+        path='./mypath{n}'
+        path = path.format(n=i)
+        ckpt = tf.train.get_checkpoint_state(path)
+        if ckpt and ckpt.model_checkpoint_path:
+           saver.restore(sess, ckpt.model_checkpoint_path)
+           cross1 = sess.run([cross_entropy], feed_dict={xs: test_smile[:265], ys: test_lable[:265], keep_prob: 1})
+        #print(cross1)
+        #print(compute_accuracy(
+        #    test_smile[:265], test_lable[:265]))
+        #file = open("label.txt","w")
+           y_pre = sess.run(prediction,feed_dict={xs:test_smile,keep_prob:1})
+           #print(y_pre[:10])
+           y_pred = tf.argmax(y_pre, 1)
+           if first==0:
+                y=sess.run(y_pred)
+                first=1
+           else:
+                x=sess.run(y_pred)
+                y=x+y
+                print(len(y))
+        #np.savetxt("label.txt", y, delimiter="\n")
+        # sess.close()
+print(y)
+for i in range(len(y)):
+        # print(i)
+        if y[i]>=2:
+                y[i]=1
+                #print(y[i])
+        else:
+                y[i]=0
+#print(y)
+print(compute_accuracy(y, test_lable[:265]))
+np.savetxt("label.txt", y, delimiter="\n")
